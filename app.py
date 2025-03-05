@@ -4,31 +4,40 @@ import pandas as pd
 import os
 
 app = Flask(__name__)
-CORS(app)  # Allows frontend to communicate with backend
+CORS(app)  # Enable CORS for cross-origin requests
 
-# File to store appointment data
-data_file = "appointments.xlsx"
-
-@app.route("/")
+# Sample route
+@app.route("/", methods=["GET"])
 def home():
-    return "Chatbot Backend is Running!"
+    return jsonify({"message": "Chatbot backend is running!"})
 
-@app.route("/save", methods=["POST"])
-def save_data():
+# Sample API to receive and store data in an Excel file
+@app.route("/submit", methods=["POST"])
+def submit_data():
     try:
-        data = request.json
-        df = pd.DataFrame([data])  # Convert JSON to DataFrame
+        data = request.json  # Get JSON data from request
+        df = pd.DataFrame([data])  # Convert JSON to Pandas DataFrame
 
-        # Check if file exists, append or create new
-        if os.path.exists(data_file):
-            existing_df = pd.read_excel(data_file)
+        # Define the Excel file path
+        excel_file = "responses.xlsx"
+
+        # Check if file exists, if yes, append data
+        if os.path.exists(excel_file):
+            existing_df = pd.read_excel(excel_file)
             df = pd.concat([existing_df, df], ignore_index=True)
-        
-        df.to_excel(data_file, index=False)
-        
+
+        # Save DataFrame to Excel
+        df.to_excel(excel_file, index=False)
+
         return jsonify({"message": "Data saved successfully!"}), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Get the PORT from environment variables (default to 10000)
+port = int(os.environ.get("PORT", 10000))
+
+# Run the app on 0.0.0.0 to make it accessible on Render
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=10000, debug=True)
+
